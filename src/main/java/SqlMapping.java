@@ -21,6 +21,10 @@ public class SqlMapping {
     //SQL KEYWORD SET를 구성, KEYWORD는 대문자로 표시
     private static Set<String> keyWordSet = new HashSet<>(Arrays.asList("select", "from", "where", "as", "and", "or", "union", "left", "outer", "join", "right"));
 
+    private static HashMap<String, ColumnEntity> subQueryAlias = new HashMap<>();
+
+    private static Stack<String> bracketStack = new Stack<>();
+
     public static void main(String[] args) {
         //메모장에서 sql 추출
         String sql = getSqlByTxt();
@@ -38,6 +42,8 @@ public class SqlMapping {
         //메모장에서 추출한 sql를 단어로 분리해서 리스트에 저장
         extractWord(sql);
 
+       // printList(words);
+
         //엑셀에서 매핑 정보 가져오기
         List<String> excelList = getTableColumnMappingString2();
 
@@ -49,11 +55,12 @@ public class SqlMapping {
 
         //매핑 시작
         String mappedSql = executeAliasColumnMappingAndNonAliasColumnMapping(sql, sqlContainsTableMap);
-
-
+        words.clear();
+        extractWord(mappedSql);
+        printList(words);
         //메모장에 매핑한 sql 저장
         saveTxtFile(mappedSql);
-        JOptionPane.showMessageDialog(null, "SQL Mapping Version 2.0 \n Mapped Successfully!\n Made By : 유영균 AsianaIDT \n ");
+      //  JOptionPane.showMessageDialog(null, "SQL Mapping Version 2.0 \n Mapped Successfully!\n Made By : 유영균 AsianaIDT \n " ,"SQL Column Mapper Version 2.0",JOptionPane.INFORMATION_MESSAGE,new ImageIcon("images/AsianaIDT.png"));
     }
 
     public static String executeAliasColumnMappingAndNonAliasColumnMapping(String sql, HashMap<String, TableEntity> map){
@@ -319,13 +326,35 @@ public class SqlMapping {
                     if(Character.isLetter(sql.charAt(j)) || sql.charAt(j) == 45 || Character.isDigit(sql.charAt(j)) || sql.charAt(j) == 95 || sql.charAt(j) == '.'){
                         findSelect+=Character.toString(sql.charAt(j));
                     }else{
+                        //서브쿼리의 시작인 (인 경우는 words에 넣는다 이는 바로 뒤의 word가 SELECT인 경우다.
                         if(findSelect.equals("SELECT")){
                             words.add("(");
+                            /**
+                             * "("가 의미하는 것이 함수의 시작일 수도 있고 서브쿼리의 시작일 수도 있다
+                             * 서브 쿼리의 시작일 경우 "("로 저장하고 아니라면 *로 저장한다
+                             * 이는 함수의 끝인 )를 만났을 때 뺄 것이다.
+                             */
+                            bracketStack.add("(");
                             continueFlag = true;
+                        }else{
+                            bracketStack.add("*");
                         }
                         findSelect = "";
                         break;
                     }
+                }
+            }
+            else if(sql.charAt(i) == ')'){
+                String nextWord = getNextWord(i+1, sql.length(),sql);
+
+                if((nextWord.equals("AS") || nextWord.matches("[a-zA-Z0-9]+")) && bracketStack.size() > 0 && bracketStack.peek().equals("(")){
+                    //서브쿼리의 끝일 경우
+                    words.add(")");
+                    word = "";
+                    bracketStack.pop();
+                }else if(bracketStack.peek().equals("*")){
+                    //함수의 끝일 경우엔 "("를 하나 뺀다.
+                    bracketStack.pop();
                 }
             }
             if(continueFlag){
@@ -345,6 +374,19 @@ public class SqlMapping {
         }
 
         return words;
+    }
+
+    public static String getNextWord(int startIdx, int endIdx, String sql){
+        String nextWord = "";
+        for(int i=startIdx; i<=endIdx;i++){
+            if(Character.isLetter(sql.charAt(i)) || sql.charAt(i) == 45 || Character.isDigit(sql.charAt(i)) || sql.charAt(i) == 95 || sql.charAt(i) == '.') {
+                nextWord += Character.toString(sql.charAt(i));
+            }else{
+                if(nextWord != "")
+                    return nextWord;
+            }
+        }
+        return "";
     }
 
     //메모장에서 sql 내용 가져오기
