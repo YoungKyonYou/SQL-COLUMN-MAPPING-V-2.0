@@ -1,9 +1,7 @@
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.usermodel.Table;
 
 import javax.swing.*;
 import java.io.*;
-import java.sql.SQLOutput;
 import java.util.*;
 
 public class SqlMapping {
@@ -50,16 +48,15 @@ public class SqlMapping {
         findTableEntityAndInsert(words);
 
         //매핑 시작
-        String mappedSql = executeAliasColumnMapping(sql, sqlContainsTableMap);
+        String mappedSql = executeAliasColumnMappingAndNonAliasColumnMapping(sql, sqlContainsTableMap);
+
 
         //메모장에 매핑한 sql 저장
         saveTxtFile(mappedSql);
         JOptionPane.showMessageDialog(null, "SQL Mapping Version 2.0 \n Mapped Successfully!\n Made By : 유영균 AsianaIDT \n ");
-
-
     }
 
-    public static String executeAliasColumnMapping(String sql, HashMap<String, TableEntity> map){
+    public static String executeAliasColumnMappingAndNonAliasColumnMapping(String sql, HashMap<String, TableEntity> map){
         String mappedSql = sql;
         TableEntity tableEntity = null;
         int leftBracketCnt = 0;
