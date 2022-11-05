@@ -1,6 +1,9 @@
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.Table;
 
+import javax.swing.*;
 import java.io.*;
+import java.sql.SQLOutput;
 import java.util.*;
 
 public class SqlMapping {
@@ -51,7 +54,7 @@ public class SqlMapping {
 
         //메모장에 매핑한 sql 저장
         saveTxtFile(mappedSql);
-
+        JOptionPane.showMessageDialog(null, "SQL Mapping Version 2.0 \n Mapped Successfully!\n Made By : 유영균 AsianaIDT \n ");
 
 
     }
@@ -59,8 +62,16 @@ public class SqlMapping {
     public static String executeAliasColumnMapping(String sql, HashMap<String, TableEntity> map){
         String mappedSql = sql;
         TableEntity tableEntity = null;
+        int leftBracketCnt = 0;
         for(int i=0;i<words.size() ;i++){
             String[] aliasAndColNm = null;
+
+            //leftBracket인 경우 count 올리고 다시 continue;
+            if(words.get(i).equals("(")){
+                leftBracketCnt++;
+                continue;
+            }
+
             //엘리어스가 존재하는 컬럼이라면
             if(words.get(i).contains(".")){
                 aliasAndColNm = words.get(i).split("\\.");
@@ -72,22 +83,33 @@ public class SqlMapping {
 
                 //컬럼에 해당하는 엘리어스에 해당하는 테이블이 있을 경우
                 if(aliasAndColNm != null && tableEntity.getAlias() != null && tableEntity.getAlias().contains(aliasAndColNm[0]) && !map.containsKey(aliasAndColNm[1])){
-                    //컬럼의 카멜케이스
-                    String camelCaseColNm = getColNmToCamelCase(tableEntity.getColumnMappingMap().get(aliasAndColNm[1]).getToBeLogicalColName());
-                    //컬럼의 물리이름
-                    String physicalColNm = tableEntity.getColumnMappingMap().get(aliasAndColNm[1]).getToBePhysicalColName();
-
-                    ColumnEntity columnEntity =new ColumnEntity();
-                    columnEntity.setToBeLogicalColName(camelCaseColNm);
-                    columnEntity.setToBePhysicalColName(physicalColNm);
-
-                    camelCaseColNmSet2.add(columnEntity);
+                    addToCamelCaseTxt(tableEntity, aliasAndColNm[1]);
 
                     //엘리어스 있는 컬럼 매핑
                     if(tableEntity.getAlias().contains(aliasAndColNm[0])){
 
                         //aliasAndColNm[0]는 alias만을 의미
                         mappedSql = mappedSql.replaceAll(words.get(i), (aliasAndColNm[0].toLowerCase()+"."+tableEntity.getColumnMappingMap().get(aliasAndColNm[1]).getToBeLogicalColName().toUpperCase()).trim());
+                    }
+                    //엘리어스 없는 컬럼명일 경우
+                }else if(aliasAndColNm == null && tableEntity.isNoAliasYn()){
+                    for(String key1 : map.keySet()){
+                        for(Integer cnt : map.get(key1).getLeftBracketCount()){
+                            if(cnt == leftBracketCnt){
+                                String findSelect = "";
+                                //엘리어스 없는 똑같은 이름을 가진 컬럼명이 여러 개 있을 수 있는데 이때 테이블이 다르고 as-is 컬럼명이 같을 수 있다.
+                                //이때 해당 컬럼명이 있는 자리에서 첫 번째 그 자체 컬럼명만 바꾸기 위해서 idx를 추출해서 그 idx부터 한번만 replace를 실행한다.
+                                int idx = findIndexOfColumNm(words.get(i), mappedSql, leftBracketCnt);
+
+                                //words.get(i)가 컬럼명일 경우만
+                                if(tableEntity.getColumnMappingMap().get(words.get(i)) != null && idx<mappedSql.length() && idx > 0){
+                                    addToCamelCaseTxt(tableEntity, words.get(i));
+
+                                    mappedSql = mappedSql.substring(0,idx)+mappedSql.substring(idx, mappedSql.length()).replaceFirst("\\b"+words.get(i)+"\\b", tableEntity.getColumnMappingMap().get(words.get(i)).getToBeLogicalColName().toUpperCase()).trim();
+                                }
+
+                            }
+                        }
                     }
                 }
 
@@ -99,6 +121,53 @@ public class SqlMapping {
             }
         }
         return mappedSql;
+    }
+
+    public static void addToCamelCaseTxt(TableEntity tableEntity, String columnNm){
+        //컬럼의 카멜케이스
+        String camelCaseColNm = getColNmToCamelCase(tableEntity.getColumnMappingMap().get(columnNm).getToBeLogicalColName());
+        //컬럼의 물리이름
+        String physicalColNm = tableEntity.getColumnMappingMap().get(columnNm).getToBePhysicalColName();
+
+        ColumnEntity columnEntity =new ColumnEntity();
+        columnEntity.setToBeLogicalColName(camelCaseColNm);
+        columnEntity.setToBePhysicalColName(physicalColNm);
+
+        camelCaseColNmSet2.add(columnEntity);
+    }
+
+    public static int findIndexOfColumNm(String columNm, String sql, int leftBracketCnt) {
+        String findSelect = "";
+        boolean continueFlag = false;
+        int cnt = 0;
+        for (int i = 0; i < sql.length() - 1; i++) {
+
+            if (cnt == leftBracketCnt) {
+                return i;
+            }
+
+            //Select 바로 왼쪽에 '('이 존재하면 넣고 다시 첫 i-for 문으로 돌아가기
+            if (sql.charAt(i) == '(') {
+                for (int j = i + 1; j < sql.length() - 1; j++) {
+                    if (Character.isLetter(sql.charAt(j)) || sql.charAt(j) == 45 || Character.isDigit(sql.charAt(j)) || sql.charAt(j) == 95 || sql.charAt(j) == '.') {
+                        findSelect += Character.toString(sql.charAt(j));
+                    } else {
+                        if (findSelect.equals("SELECT")) {
+                            //words.add("(");
+                            cnt++;
+                            continueFlag = true;
+                        }
+                        findSelect = "";
+                        break;
+                    }
+                }
+            }
+            if (continueFlag) {
+                continueFlag = false;
+                continue;
+            }
+        }
+        return 0;
     }
 
 
@@ -169,6 +238,9 @@ public class SqlMapping {
                 if(!words.get(i+1).equals("WHERE") && !tableMap.containsKey(words.get(i+1).trim())){
                     //엘리어스 문자 세팅
                     tableMap.get(words.get(i)).putAliasInSet(words.get(i+1));
+                    tableMap.get(words.get(i)).setAliasYn(true);
+                }else{
+                    tableMap.get(words.get(i)).setNoAliasYn(true);
                 }
                 tableMap.get(words.get(i)).putLeftBracketCount(leftBracketCnt);
                 //sql에 존재하는 테이블을 sqlContainsTableMap에 따로 저장 key로는 AS-IS 테이블 명, value는 테이블 엔티티 객체

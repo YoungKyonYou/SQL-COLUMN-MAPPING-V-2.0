@@ -6,6 +6,10 @@ public class TableEntity {
 
     private String ToBeTableName;
     private String AsIsTableName;
+    //alias가 있는 테이블인지 여부
+    private boolean aliasYn = false;
+    //alias가 없는 테이블인지 아닌지 여부
+    private boolean noAliasYn = false;
 
     //key로 As-Is 컬럼 명 value로 As-Is 컬럼의 논리명과 물리명 그리고 To-Be 컬럼의 논리명과 물리명
     private HashMap<String, ColumnEntity> columnMappingMap=new HashMap<>();
@@ -68,5 +72,21 @@ public class TableEntity {
 
     public void putLeftBracketCount(int count){
         this.leftBracketCount.add(count);
+    }
+
+    public boolean isAliasYn() {
+        return aliasYn;
+    }
+
+    public void setAliasYn(boolean aliasYn) {
+        this.aliasYn = aliasYn;
+    }
+
+    public boolean isNoAliasYn() {
+        return noAliasYn;
+    }
+
+    public void setNoAliasYn(boolean noAliasYn) {
+        this.noAliasYn = noAliasYn;
     }
 }
