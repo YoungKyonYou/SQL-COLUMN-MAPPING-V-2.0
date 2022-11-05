@@ -31,6 +31,7 @@ public class SqlMapping {
 
     private static String sqlForSubQuery = "";
 
+
     public static void main(String[] args) {
         //메모장에서 sql 추출
         String sql = getSqlByTxt();
@@ -48,9 +49,6 @@ public class SqlMapping {
         //메모장에서 추출한 sql를 단어로 분리해서 리스트에 저장
         extractWord(sql);
 
-        printList(words);
-
-       // printList(words);
 
         //엑셀에서 매핑 정보 가져오기
         List<String> excelList = getTableColumnMappingString2();
@@ -64,16 +62,14 @@ public class SqlMapping {
         //매핑 시작
         String mappedSql = executeAliasColumnMappingAndNonAliasColumnMapping(sql, sqlContainsTableMap);
 
-      //  extractWordEntity(mappedSql);
+        extractWordEntity(mappedSql);
 
         //이후에 재귀 함수를 사용하기 위해서 따로 전역 변수를 선언하고 초기화
-//        sqlForSubQuery = mappedSql;
-//        System.out.println("sql:"+sqlForSubQuery);
-//
-//        sqlForSubQuery = executeSubQueryMapping(sqlForSubQuery);
+        sqlForSubQuery = mappedSql;
+        sqlForSubQuery = executeSubQueryMapping(sqlForSubQuery);
         //메모장에 매핑한 sql 저장
-        saveTxtFile(mappedSql);
-      //  JOptionPane.showMessageDialog(null, "SQL Mapping Version 2.0 \n Mapped Successfully!\n Made By : 유영균 AsianaIDT \n " ,"SQL Column Mapper Version 2.0",JOptionPane.INFORMATION_MESSAGE,new ImageIcon("images/AsianaIDT.png"));
+        saveTxtFile(sqlForSubQuery);
+        JOptionPane.showMessageDialog(null, "SQL Mapping Version 2.0 \n Mapped Successfully!\n Made By : 유영균 AsianaIDT \n " ,"SQL Column Mapper Version 2.0",JOptionPane.INFORMATION_MESSAGE,new ImageIcon("images/AsianaIDT.png"));
     }
 
     public static String executeSubQueryMapping(String sqlForSubQuery){
@@ -84,22 +80,31 @@ public class SqlMapping {
                 word += Character.toString(sqlForSubQuery.charAt(i));
             }else{
                 String[] separateAlias = word.split("\\.");
-//                if(!word.equals(""))
-//                    System.out.println("word:"+word);
                 if(separateAlias!=null && separateAlias.length == 2 && asIsColumnSet.contains(separateAlias[1])){
                     /**
                      * 매핑이 안된 컬럼은 subquery에서 파생된 컬럼이라는 것임으로 무조건 alias를 가지고 있다.
                      */
                     //alias를 가지고 있는 컬럼일 경우 (원래 무조건 가지고 있지만 혹시 모를 에러가 나는 상황 방지 위해)
                     if(separateAlias.length == 2){
-                        String mappedColumnNm=findColumnMapping(word, separateAlias[0]);
-                        sqlForSubQuery=sqlForSubQuery.substring(0,wordEntities.get(i).getStartIdx())+sqlForSubQuery.substring(wordEntities.get(i).getStartIdx(), sqlForSubQuery.length()).replaceFirst("\\b"+separateAlias[0]+wordEntities.get(i).getWord()+"\\b", mappedColumnNm);
+                        String mappedColumnNm=findColumnMapping(separateAlias[1], separateAlias[0]);
+                        int idx = findColumnStartIdx(word, wordEntities);
+                        String replacedSql = sqlForSubQuery.substring(wordEntities.get(idx).getStartIdx(), sqlForSubQuery.length()).replaceFirst("\\b"+word+"\\b", separateAlias[0]+"."+mappedColumnNm);
+                        sqlForSubQuery=sqlForSubQuery.substring(0,wordEntities.get(idx).getStartIdx())+replacedSql;
                     }
                 }
                 word = "";
             }
         }
         return sqlForSubQuery;
+    }
+
+    public static int findColumnStartIdx(String columnNm, List<WordEntity> wordEntities){
+        for(int i=0;i<wordEntities.size();i++){
+            if(columnNm.equals(wordEntities.get(i).getWord())){
+                return i;
+            }
+        }
+        return 0;
     }
 
     public static String findColumnMapping(String word, String alias){
@@ -112,7 +117,6 @@ public class SqlMapping {
                 for(int j=i; j>=0;j--){
                     //word는 매핑이 안된 컬럼명
                     if(word.equals(wordEntities.get(j).getAsIsNm())){
-                        System.out.println();
                         return wordEntities.get(j).getWord();
                     }
                 }
@@ -122,13 +126,25 @@ public class SqlMapping {
              * 만약 위에서 역으로 순회하는데 나타나는 단어가 as-is컬럼명이라면 다시 해당 함수를 들어가
              * 탐색한다.
              */
-            if(asIsColumnSet.contains(wordEntities.get(i).getWord())){
+            if(asIsColumnSet.contains(wordEntities.get(i).getWord()) && checkIfLowerCase(wordEntities.get(i).getWord())){
                 String[] aliasColumn = wordEntities.get(i).getWord().split(".");
-                String mappedColumnNm = findColumnMapping(wordEntities.get(i).getWord(),aliasColumn[0]);
-                sqlForSubQuery=sqlForSubQuery.substring(0,wordEntities.get(i).getStartIdx())+sqlForSubQuery.substring(wordEntities.get(i).getStartIdx(), sqlForSubQuery.length()).replaceFirst("\\b"+aliasColumn[0]+wordEntities.get(i).getWord()+"\\b", mappedColumnNm);
+                //여기서 if를 해주는 이유는 AS 이후의 alias를 as-is 컬럼명으로 착각할 수 있기 때문이다 이때는 필수적으로 있는 alias가 없는 경우이기 때문이다.
+                if(aliasColumn != null && aliasColumn.length == 2){
+                    String mappedColumnNm = findColumnMapping(wordEntities.get(i).getWord(),aliasColumn[0]);
+                    sqlForSubQuery=sqlForSubQuery.substring(0,wordEntities.get(i).getStartIdx())+sqlForSubQuery.substring(wordEntities.get(i).getStartIdx(), sqlForSubQuery.length()).replaceFirst("\\b"+aliasColumn[0]+wordEntities.get(i).getWord()+"\\b", mappedColumnNm);
+                }
             }
         }
         return word;
+    }
+
+    public static boolean checkIfLowerCase(String word){
+        for(int i=0;i<word.length();i++){
+            if(Character.isUpperCase(word.charAt(i))){
+                return false;
+            }
+        }
+        return true;
     }
 
     public static String executeAliasColumnMappingAndNonAliasColumnMapping(String sql, HashMap<String, TableEntity> map){
@@ -147,7 +163,6 @@ public class SqlMapping {
             //엘리어스가 존재하는 컬럼이라면
             if(words.get(i).contains(".")){
                 aliasAndColNm = words.get(i).split("\\.");
-                //System.out.println("alias:"+aliasAndColNm[0]+" colnm:"+aliasAndColNm[1]);
             }
             //sql 안에 존재하는 테이블을 각각 꺼내면서 그 테이블에 해당하는 컬럼이 있다면 매핑한다.
             for(String strKey : map.keySet()){
@@ -319,7 +334,7 @@ public class SqlMapping {
                 sqlContainsTableMap.put(tableMap.get(words.get(i)).getAsIsTableName(), tableMap.get(words.get(i)));
             }
         }
-        System.out.println();
+
     }
 
     //sql-table.txt에서 각 라인을 split 하고 정보를 저장
@@ -421,7 +436,7 @@ public class SqlMapping {
                 }
             }
             //")"를 넣기 위함인데 여기서 함수의 끝이 아닌 subquery의 끝일 경우 넣는다.
-            else if(sql.charAt(i) == ')'){
+            else if(word.equals("") && sql.charAt(i) == ')'){
                 int rightBracketStartIdx = i;
                 String nextWord = getNextWord(i+1, sql.length(),sql);
 
@@ -474,9 +489,6 @@ public class SqlMapping {
         String findSelect = "";
 
         for(int i=0;i<sql.length()-1;i++){
-            if(i==945){
-                System.out.println();
-            }
             //Select 바로 왼쪽에 '('이 존재하면 넣고 다시 첫 i-for 문으로 돌아가기
             if(sql.charAt(i) == '('){
                 for(int j=i+1; j<sql.length()-1 ;j++){

@@ -1,3 +1,6 @@
+/**
+ * executeAliasColumnMappingAndNonAliasColumnMapping()를 거친후 다시 extractword 한 것이다.
+ */
 public class WordEntity {
     private String word;
     private int startIdx;
