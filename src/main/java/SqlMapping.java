@@ -412,7 +412,7 @@ public class SqlMapping {
 
         //sql에서 테이블 이름 앞에 스키마가 붙은 것을 떼어주기 위함 ex: nexs.tableName -> tableName으로
         for(String tableNm : tableMap.keySet()){
-            sql = sql.replaceAll("\\b[a-zA-Z0-9]+."+tableNm+"\\b",tableNm);
+            sql = sql.replaceAll("\\b[a-zA-Z0-9]+\\."+tableNm+"\\b",tableNm);
         }
 
         return sql;
