@@ -1,8 +1,14 @@
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.Table;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,7 +29,7 @@ public class SqlMapping {
     private static Set<ColumnEntity> camelCaseColNmSet2 = new TreeSet<>((o1, o2) -> o1.getToBeLogicalColName().compareTo(o2.getToBeLogicalColName()));
 
     //SQL KEYWORD SET를 구성, KEYWORD는 대문자로 표시
-    private static Set<String> keyWordSet = new HashSet<>(Arrays.asList("select", "from", "where", "as", "and", "or", "union", "left", "outer", "join", "right"));
+    private static Set<String> keyWordSet = new HashSet<>(Arrays.asList("select", "from", "where", "as", "and", "or", "union", "left", "outer", "join", "right", "inner"));
 
     private static Set<String> asIsColumnSet = new HashSet<>();
 
@@ -46,15 +52,14 @@ public class SqlMapping {
             sql = sql.replaceAll("\\b"+key+"\\b", key.toUpperCase());
         }
 
-        //메모장에서 추출한 sql를 단어로 분리해서 리스트에 저장
-        extractWord(sql);
-
-
         //엑셀에서 매핑 정보 가져오기
         List<String> excelList = getTableColumnMappingString2();
 
         //엑셀에서 가져온 매핑 정보를 tableEntityMap에 세팅하기
-        setSqlMappingMap(excelList);
+        sql = setSqlMappingMap(excelList, sql);
+
+        //메모장에서 추출한 sql를 단어로 분리해서 리스트에 저장
+        extractWord(sql);
 
         //sql에 존재하는 테이블을 sqlContainsTableMap에 따로 저장
         findTableEntityAndInsert(words);
@@ -69,7 +74,33 @@ public class SqlMapping {
         sqlForSubQuery = executeSubQueryMapping(sqlForSubQuery);
         //메모장에 매핑한 sql 저장
         saveTxtFile(sqlForSubQuery);
-        JOptionPane.showMessageDialog(null, "SQL Mapping Version 2.0 \n Mapped Successfully!\n Made By : 유영균 AsianaIDT \n " ,"SQL Column Mapper Version 2.0",JOptionPane.INFORMATION_MESSAGE,new ImageIcon("images/AsianaIDT.png"));
+
+        String title = " __       _     ___      _                                                            \n"+
+                "/ _\\ __ _| |   / __\\___ | |_   _ _ __ ___  _ __     /\\/\\   __ _ _ __  _ __   ___ _ __ \n"+
+                "\\ \\ / _` | |  / /  / _ \\| | | | | '_ ` _ \\| '_ \\   /    \\ / _` | '_ \\| '_ \\ / _ \\ '__|\n"+
+                "_\\ \\ (_| | | / /__| (_) | | |_| | | | | | | | | | / /\\/\\ \\ (_| | |_) | |_) |  __/ |   \n"+
+                "\\__/\\__, |_| \\____/\\___/|_|\\__,_|_| |_| |_|_| |_| \\/    \\/\\__,_| .__/| .__/ \\___|_|   \n"+
+                "       |_|                                                     |_|   |_|              \n";
+        String str = "            _____ _____          _   _          _____ _____ _______ \n"+
+                "     /\\    / ____|_   _|   /\\   | \\ | |   /\\   |_   _|  __ |__   __|\n"+
+                "    /  \\  | (___   | |    /  \\  |  \\| |  /  \\    | | | |  | | | |   \n"+
+                "   / /\\ \\  \\___ \\  | |   / /\\ \\ | . ` | / /\\ \\   | | | |  | | | |   \n"+
+                "  / ____ \\ ____) |_| |_ / ____ \\| |\\  |/ ____ \\ _| |_| |__| | | |   \n"+
+                " /_/    \\_|_____/|_____/_/    \\_|_| \\_/_/    \\_|_____|_____/  |_|   \n";
+
+        String ver = "+-+-+-+-+-+-+-+ +-+-+-+\n"+
+                "|V|e|r|s|i|o|n| |2|.|1|\n"+
+                "+-+-+-+-+-+-+-+ +-+-+-+\n";
+
+        JTextArea tArea = new JTextArea(22, 87);
+        tArea.setFont(new Font(Font.MONOSPACED, Font.BOLD, 20));
+        tArea.setText(title+"\n"+ ver+ "\n Mapped Successfully!\n Made By : 유영균 AsianaIDT \n\n\n "+str);
+        tArea.setEnabled(false);
+
+        JScrollPane scrollPane = new JScrollPane(tArea);
+        //!! JOptionPane.showMessageDialog(null, sb.toString());
+        JOptionPane.showMessageDialog(null, scrollPane, "SQL Column Mapper Version 2.1", JOptionPane.INFORMATION_MESSAGE);
+     //   JOptionPane.showMessageDialog(null, "SQL Mapping Version 2.1 \n Mapped Successfully!\n Made By : 유영균 AsianaIDT \n\n\n "+str ,"SQL Column Mapper Version 2.0",JOptionPane.INFORMATION_MESSAGE,null);
     }
 
     public static String executeSubQueryMapping(String sqlForSubQuery){
@@ -200,6 +231,7 @@ public class SqlMapping {
                     }
                 }
 
+                //n
                 //테이블명 매핑
                 if(tableEntity.getAsIsTableName().equals(words.get(i))){
                     mappedSql = mappedSql.replaceAll("\\b"+words.get(i)+"\\b", tableEntity.getToBeTableName().toUpperCase());
@@ -338,7 +370,7 @@ public class SqlMapping {
     }
 
     //sql-table.txt에서 각 라인을 split 하고 정보를 저장
-    public static void setSqlMappingMap(List<String> excelList){
+    public static String setSqlMappingMap(List<String> excelList, String sql){
         for(String str:excelList){
             TableEntity tableEntity = new TableEntity();
             String[] cell = str.split(" ");
@@ -377,6 +409,13 @@ public class SqlMapping {
 
             //   printHashMap(tableEntity.getColumnMappingMap());
         }
+
+        //sql에서 테이블 이름 앞에 스키마가 붙은 것을 떼어주기 위함 ex: nexs.tableName -> tableName으로
+        for(String tableNm : tableMap.keySet()){
+            sql = sql.replaceAll("\\b[a-zA-Z0-9]+."+tableNm+"\\b",tableNm);
+        }
+
+        return sql;
     }
 
     public static List<String> getTableColumnMappingString2(){
@@ -388,7 +427,8 @@ public class SqlMapping {
             br = new BufferedReader(new FileReader(note));
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 line = line.trim();
-                excelList.add(line.toLowerCase());
+                //엑셀에서 메모장으로 복사해오면 tab 문자가 생기는 이를 스페이스 바 하나로 변환
+                excelList.add(line.toLowerCase().replaceAll("\t", " "));
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -548,7 +588,8 @@ public class SqlMapping {
 
     public static String getNextWord(int startIdx, int endIdx, String sql){
         String nextWord = "";
-        for(int i=startIdx; i<=endIdx;i++){
+        System.out.println();
+        for(int i=startIdx; i<endIdx;i++){
             if(Character.isLetter(sql.charAt(i)) || sql.charAt(i) == 45 || Character.isDigit(sql.charAt(i)) || sql.charAt(i) == 95 || sql.charAt(i) == '.') {
                 nextWord += Character.toString(sql.charAt(i));
             }else{
@@ -576,7 +617,6 @@ public class SqlMapping {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         return sql.toUpperCase();
     }
 
@@ -622,8 +662,12 @@ public class SqlMapping {
 
     public static String setToPlainString(){
         String str = "";
+
         for(ColumnEntity entity : camelCaseColNmSet2){
-            str+=entity.getToBeLogicalColName()+"    "+"/*"+entity.getToBePhysicalColName()+"*/"+"\r\n";
+            byte[] bytes = entity.getToBePhysicalColName().getBytes(StandardCharsets.UTF_8);
+
+            String utf8EncodedString = new String(bytes, StandardCharsets.UTF_8);
+            str+=entity.getToBeLogicalColName()+"    "+"/*"+utf8EncodedString+"*/"+"\r\n";
         }
         return str;
     }

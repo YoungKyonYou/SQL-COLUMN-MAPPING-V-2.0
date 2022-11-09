@@ -3,6 +3,8 @@ import java.util.Objects;
 public class ColumnEntity {
     private String ToBeLogicalColName;
     private String ToBePhysicalColName;
+    private String ToBeDataType;
+    private String ToBeDataLen;
     private String AsIsLogicalColName;
     private String AsIsPhysicalColName;
 
@@ -34,7 +36,24 @@ public class ColumnEntity {
         return AsIsPhysicalColName;
     }
 
+    public String getToBeDataType() {
+        return ToBeDataType;
+    }
+
+    public void setToBeDataType(String toBeDataType) {
+        ToBeDataType = toBeDataType;
+    }
+
+    public String getToBeDataLen() {
+        return ToBeDataLen;
+    }
+
+    public void setToBeDataLen(String toBeDataLen) {
+        ToBeDataLen = toBeDataLen;
+    }
+
     public void setAsIsPhysicalColName(String asIsPhysicalColName) {
+
         AsIsPhysicalColName = asIsPhysicalColName;
     }
 

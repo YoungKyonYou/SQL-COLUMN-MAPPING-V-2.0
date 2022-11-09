@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="test" tests="1" skipped="0" failures="0" errors="0" timestamp="2022-11-05T17:29:39" hostname="AISELN-YOUYK" time="0.157">
+<testsuite name="test" tests="1" skipped="0" failures="0" errors="0" timestamp="2022-11-09T00:19:24" hostname="AISELN-YOUYK" time="0.017">
   <properties/>
-  <testcase name="testRegex()" classname="test" time="0.157"/>
-  <system-out><![CDATA[]]></system-out>
+  <testcase name="test3()" classname="test" time="0.017"/>
+  <system-out><![CDATA[tb_wbws_spbillprgs_c
+tb_wbwr_clntinfo_c
+tb_stst_trspbilllaststs_d
+]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
