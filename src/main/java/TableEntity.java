@@ -6,9 +6,9 @@ public class TableEntity {
 
     private String ToBeTableName;
     private String AsIsTableName;
-    //alias가 있는 테이블인지 여부
+    //alias가 있는 테이블인지 여부 false : 엘리어스가 없는 테이블 true : 엘리어스가 있는 테이블
     private boolean aliasYn = false;
-    //alias가 없는 테이블인지 아닌지 여부
+    //alias가 없는 테이블인지 아닌지 여부 true : 엘리어스가 없는 테이블임
     private boolean noAliasYn = false;
 
     //key로 As-Is 컬럼 명 value로 As-Is 컬럼의 논리명과 물리명 그리고 To-Be 컬럼의 논리명과 물리명
