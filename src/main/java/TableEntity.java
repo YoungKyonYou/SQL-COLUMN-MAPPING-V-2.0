@@ -1,5 +1,6 @@
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class TableEntity {
@@ -89,4 +90,5 @@ public class TableEntity {
     public void setNoAliasYn(boolean noAliasYn) {
         this.noAliasYn = noAliasYn;
     }
+
 }

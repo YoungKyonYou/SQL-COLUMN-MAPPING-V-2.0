@@ -7,10 +7,8 @@ public class ColumnEntity {
     private String ToBeDataLen;
     private String AsIsLogicalColName;
     private String AsIsPhysicalColName;
-
-    public String getToBeLogicalColName() {
-        return ToBeLogicalColName;
-    }
+    private String ToBeTableName;
+    private String AsIsTableName;
 
     public void setToBeLogicalColName(String toBeLogicalColName) {
         ToBeLogicalColName = toBeLogicalColName;
@@ -36,6 +34,7 @@ public class ColumnEntity {
         return AsIsPhysicalColName;
     }
 
+
     public String getToBeDataType() {
         return ToBeDataType;
     }
@@ -57,12 +56,32 @@ public class ColumnEntity {
         AsIsPhysicalColName = asIsPhysicalColName;
     }
 
+    public String getToBeLogicalColName() {
+        return ToBeLogicalColName;
+    }
+
+    public String getToBeTableName() {
+        return ToBeTableName;
+    }
+
+    public void setToBeTableName(String toBeTableName) {
+        ToBeTableName = toBeTableName;
+    }
+
+    public String getAsIsTableName() {
+        return AsIsTableName;
+    }
+
+    public void setAsIsTableName(String asIsTableName) {
+        AsIsTableName = asIsTableName;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ColumnEntity that = (ColumnEntity) o;
-        return ToBeLogicalColName.equals(that.ToBeLogicalColName);
+        return Objects.equals(ToBeLogicalColName, that.ToBeLogicalColName);
     }
 
     @Override

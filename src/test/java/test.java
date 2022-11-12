@@ -1,3 +1,4 @@
+import org.apache.poi.ss.usermodel.Table;
 import org.junit.jupiter.api.Test;
 
 import javax.swing.*;
@@ -6,6 +7,8 @@ import java.awt.image.BufferedImage;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -52,21 +55,17 @@ public class test {
 
     @Test
     public void test3(){
+        Set<ColumnEntity> set = new HashSet<>();
+        ColumnEntity col1 =new ColumnEntity();
+        ColumnEntity col2 =new ColumnEntity();
+        col1.setToBeLogicalColName("hi");
+        col2.setToBeLogicalColName("hi");
+        set.add(col1);
+        set.add(col2);
 
 
-        String str="tb_wbwr_trspbill_c        a,                                                              \n" +
-                "         tb_wbws_subbill_c         aa,                                                             \n" +
-                "         nexs.tb_wbws_spbillprgs_c      aaa,                                                            \n" +
-                "         nexs.tb_wbwr_clntinfo_c        aaaa,                                                           \n" +
-                "         nexs.tb_stst_trspbilllaststs_d d,                                                              \n" +
-                "         tb_mscd_code_d            c ";
-        String[] strs = {"tb_wbws_spbillprgs_c", "tb_wbwr_clntinfo_c", "tb_stst_trspbilllaststs_d"};
-        for(int i=0;i<strs.length;i++){
-            str= str.replaceAll("\\b[a-zA-Z0-9]+."+strs[i]+"\\b",strs[i]);
-        }
-        for(String s: strs){
-            System.out.println(s);
-        }
+
+        System.out.println("size:"+set.size());
     }
 
 }
