@@ -53,6 +53,8 @@ public class SqlMapping {
         //메모장에서 추출한 sql를 단어로 분리해서 리스트에 저장
         extractWordEntity(sql);
 
+
+
 //        for(int i=0;i<wordEntities.size();i++){
 //            System.out.println(wordEntities.get(i).getWord());
 //        }
@@ -63,7 +65,7 @@ public class SqlMapping {
 
 
         //매핑 시작
-        executeAliasColumnMappingAndNonAliasColumnMapping(sql, sqlContainsTableMap);
+        sql = executeAliasColumnMappingAndNonAliasColumnMapping(sql, sqlContainsTableMap);
 
         String mappedSql = mapColumn(sql);
 
@@ -97,7 +99,7 @@ public class SqlMapping {
 
         JScrollPane scrollPane = new JScrollPane(tArea);
         //!! JOptionPane.showMessageDialog(null, sb.toString());
-        //  JOptionPane.showMessageDialog(null, scrollPane, "SQL Column Mapper Version 2.1", JOptionPane.INFORMATION_MESSAGE);
+          JOptionPane.showMessageDialog(null, scrollPane, "SQL Column Mapper Version 2.1", JOptionPane.INFORMATION_MESSAGE);
         //   JOptionPane.showMessageDialog(null, "SQL Mapping Version 2.1 \n Mapped Successfully!\n Made By : 유영균 AsianaIDT \n\n\n "+str ,"SQL Column Mapper Version 2.0",JOptionPane.INFORMATION_MESSAGE,null);
     }
 
@@ -106,34 +108,34 @@ public class SqlMapping {
             //매핑되는 것이 딱 하나일 때 1:1 매핑
             if (wordEntities.get(i).getColumnEntitySet().size() == 1) {
                 String[] aliasColumn1 = wordEntities.get(i).getWord().split("\\.");
-
                 //엘리어스 없는 컬럼일 경우
-                if(aliasColumn1==null){
-                    sql = sql.replaceFirst(wordEntities.get(i).getWord(), wordEntities.get(i).getColumnEntitySet().iterator().next().getToBeLogicalColName());
+                if(aliasColumn1.length==1){
+                    Iterator col1 = wordEntities.get(i).getColumnEntitySet().iterator();
+
+                    sql = sql.replaceFirst(wordEntities.get(i).getWord(), ((ColumnEntity)col1.next()).getToBeLogicalColName());
                 }else if(aliasColumn1.length == 2){
+                    Iterator col2 = wordEntities.get(i).getColumnEntitySet().iterator();
+
                     //엘리어스 있는 컬럼일 경우
-                    sql = sql.replaceFirst("\\b[a-zA-Z0-9]+\\." + aliasColumn1[1], aliasColumn1[0]+"\\."+wordEntities.get(i).getColumnEntitySet().iterator().next().getToBeLogicalColName());
-                    System.out.println("기존:"+aliasColumn1[1]);
-                    System.out.println("change:"+wordEntities.get(i).getColumnEntitySet().iterator().next().getToBeLogicalColName());
+                    sql = sql.replaceFirst("\\b[a-zA-Z0-9]+\\." + aliasColumn1[1], aliasColumn1[0]+"\\."+((ColumnEntity)col2.next()).getToBeLogicalColName());
                 }
                 //1:N 매핑 즉 하나의 as-is 컬럼이 여러 개의 to-be 컬럼으로 매핑될 경우
             } else if (wordEntities.get(i).getColumnEntitySet().size() > 1) {
                 String[] aliasColumn2 = wordEntities.get(i).getWord().split("\\.");
                 String msg = "/*선택 : \n";
                 for(ColumnEntity columnEntity : wordEntities.get(i).getColumnEntitySet()){
-                      msg += "As-Is Table:" + columnEntity.getAsIsTableName()+" ColumnName:"+columnEntity.getAsIsLogicalColName()+"\nTo-Be Table:"+columnEntity.getToBeTableName()+" ColumnName:"+columnEntity.getToBeLogicalColName()+"\n\n";
+                      msg += "As-Is Table:" +"ㅣ"+columnEntity.getAsIsTableName()+"ㅣ"+" ColumnName:"+"ㅣ"+columnEntity.getAsIsLogicalColName()+"ㅣ"+"\nTo-Be Table:"+"ㅣ"+columnEntity.getToBeTableName()+"ㅣ"+" ColumnName:"+"ㅣ"+columnEntity.getToBeLogicalColName()+"ㅣ"+"\n\n";
                 }
                 msg+="*/\n";
 
                 //엘리어스 없는 컬럼일 경우
-                if(aliasColumn2==null){
-                    sql = sql.replaceFirst(wordEntities.get(i).getWord(),wordEntities.get(i).getWord()+"\n"+msg);
+                if(aliasColumn2.length==1){
+                    sql = sql.replaceFirst("\\b"+wordEntities.get(i).getWord()+"\\b", "ㅣ"+wordEntities.get(i).getWord()+"ㅣ"+"\n"+msg);
                 }else if(aliasColumn2.length == 2){
                     //엘리어스 있는 컬럼일 경우
-                    sql = sql.replaceFirst("\\b[a-zA-Z0-9]+\\." + aliasColumn2[1], aliasColumn2[0]+"\\."+"["+aliasColumn2[1]+"]"+"\n"+msg);
-                    System.out.println("기존:"+aliasColumn2[1]);
-                    System.out.println("change:"+wordEntities.get(i).getColumnEntitySet().iterator().next().getToBeLogicalColName());
+                    sql = sql.replaceFirst("\\b[a-zA-Z0-9]+\\." + aliasColumn2[1], aliasColumn2[0]+"\\."+"ㅣ"+aliasColumn2[1]+"ㅣ"+"\n"+msg);
                 }
+                System.out.println();
 
             }
         }
@@ -215,40 +217,43 @@ public class SqlMapping {
         return true;
     }
 
-    public static void executeAliasColumnMappingAndNonAliasColumnMapping(String sql, HashMap<String, TableEntity> map) {
+    public static String executeAliasColumnMappingAndNonAliasColumnMapping(String sql, HashMap<String, TableEntity> map) {
         String mappedSql = sql;
         TableEntity tableEntity = null;
         int leftBracketCnt = 0;
         for (int i = 0; i < wordEntities.size(); i++) {
-            String[] aliasAndColNm = null;
+            String[] aliasAndColNm = {};
 
             if (i == 21) {
                 System.out.println();
             }
 
             //엘리어스가 존재하는 컬럼이라면
-            if (wordEntities.get(i).getWord().contains(".")) {
-                aliasAndColNm = wordEntities.get(i).getWord().split("\\.");
-            }
+            aliasAndColNm = wordEntities.get(i).getWord().split("\\.");
+
             //sql 안에 존재하는 테이블을 각각 꺼내면서 그 테이블에 해당하는 컬럼이 있다면 매핑한다.
             for (String strKey : map.keySet()) {
                 tableEntity = map.get(strKey);
 
                 //컬럼이 엘리어스 컬럼일 경우
-                if (aliasAndColNm != null && aliasAndColNm.length == 2 && tableEntity.getColumnMappingMap().containsKey(aliasAndColNm[1].toUpperCase().trim())) {
+                if (aliasAndColNm.length==2 && tableEntity.getColumnMappingMap().containsKey(aliasAndColNm[1].toUpperCase().trim())) {
                     addToCamelCaseTxt(tableEntity, aliasAndColNm[1]);
-                    wordEntities.get(i).addColumnEntitySet(tableEntity.getColumnMappingMap().get(aliasAndColNm[1]));
+                    wordEntities.get(i).addColumnEntitySet(tableEntity.getColumnMappingMap().get(aliasAndColNm[1].toUpperCase().trim()));
                    // wordEntities.get(i).addTableEntity(tableEntity);
                     //엘리어스 없는 컬럼명일 경우
-                } else if (aliasAndColNm == null && tableEntity.getColumnMappingMap().containsKey(wordEntities.get(i).getWord().toUpperCase().trim())) {
+                } else if (aliasAndColNm.length == 1 && tableEntity.getColumnMappingMap().containsKey(wordEntities.get(i).getWord().toUpperCase().trim())) {
                     addToCamelCaseTxt(tableEntity, wordEntities.get(i).getWord());
-                    wordEntities.get(i).addColumnEntitySet(tableEntity.getColumnMappingMap().get(wordEntities.get(i).getWord()));
+                    wordEntities.get(i).addColumnEntitySet(tableEntity.getColumnMappingMap().get(wordEntities.get(i).getWord().toUpperCase().trim()));
                     //wordEntities.get(i).addTableEntity(tableEntity);
                 }
 
-
+                //테이블명 매핑
+                if(tableEntity.getAsIsTableName().equals(wordEntities.get(i).getWord().toUpperCase())){
+                    mappedSql = mappedSql.replaceAll("\\b"+wordEntities.get(i).getWord()+"\\b", tableEntity.getToBeTableName().toUpperCase());
+                }
             }
         }
+        return mappedSql;
     }
 
     public static void addToCamelCaseTxt(TableEntity tableEntity, String columnNm) {
@@ -359,6 +364,9 @@ public class SqlMapping {
         for (int i = 0; i < words.size() - 1; i++) {
 
             if (tableMap.containsKey(words.get(i).getWord().toUpperCase().trim())) {
+                if(words.get(i).getWord().toUpperCase().trim().equals("TB_SMSM_ATTFILEIDX_D")){
+                    System.out.println();
+                }
                 //sql에 존재하는 테이블을 sqlContainsTableMap에 따로 저장 key로는 AS-IS 테이블 명, value는 테이블 엔티티 객체
                 sqlContainsTableMap.put(tableMap.get(words.get(i).getWord().toUpperCase().trim()).getAsIsTableName().toUpperCase(), tableMap.get(words.get(i).getWord().toUpperCase().trim()));
             }
@@ -414,7 +422,11 @@ public class SqlMapping {
 
         //sql에서 테이블 이름 앞에 스키마가 붙은 것을 떼어주기 위함 ex: nexs.tableName -> tableName으로
         for (String tableNm : tableMap.keySet()) {
-            sql = sql.replaceAll("\\b[a-zA-Z0-9]+\\." + tableNm + "\\b", tableNm);
+            System.out.println("tableName:"+tableNm);
+            //sql에 테이블이 소문자일 수도 있고 대문자일 수도 있다. 그래서 대문자 replace 한번 소문자 repalce 한번 한다.
+            //sql 자체를 하나로 통일해서 안 하는 이유는 안에 함수나 문자까지 바꿔버리는 것을 방지하기 위함이다.
+            sql = sql.replaceAll("\\b[a-zA-Z0-9]+\\." + tableNm.toUpperCase() + "\\b", tableNm.toUpperCase());
+            sql = sql.replaceAll("\\b[a-zA-Z0-9]+\\." + tableNm.toLowerCase() + "\\b", tableNm.toLowerCase());
         }
 
         return sql;

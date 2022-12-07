@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,17 +56,13 @@ public class test {
 
     @Test
     public void test3(){
-        Set<ColumnEntity> set = new HashSet<>();
-        ColumnEntity col1 =new ColumnEntity();
-        ColumnEntity col2 =new ColumnEntity();
-        col1.setToBeLogicalColName("hi");
-        col2.setToBeLogicalColName("hi");
-        set.add(col1);
-        set.add(col2);
+        String tableNm = "tableNm";
+        String sql = "ㅣ nexs.tableNm ㅣ nexs.tableNm nexs.tableNm   " +
+                "nexs.tableNm nexs.tableNm sdfsfwe nexs.tableNm wre nexs.tableNm";
+        sql = sql.replaceAll("\\b[a-zA-Z0-9]+\\." + tableNm + "\\b", tableNm);
+        System.out.println("안뇽:"+sql);
 
 
-
-        System.out.println("size:"+set.size());
     }
 
 }
