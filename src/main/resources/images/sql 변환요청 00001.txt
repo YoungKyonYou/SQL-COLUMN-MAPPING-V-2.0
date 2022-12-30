@@ -1,0 +1,69 @@
+
+select c.trspbillnum
+  , c.prngnum
+  , case when instr(nvl(c.cntrbranmgmnum, ' '), c.empbranmgmnum) = 1 then 'Y'
+		 when instr(nvl(c.gthbranmgmnum, ' '),  c.empbranmgmnum) = 1 then 'Y'
+		 when instr(nvl(c.dlvbranmgmnum, ' '),  c.empbranmgmnum) = 1 then 'Y'
+		 when instr(nvl(c.empbranmgmnum2, ' '), c.empbranmgmnum) = 1 then 'Y'
+		 else 'N'
+	end authyn
+  from (select b.trspbillnum
+		  , b.prngnum
+		  , b.cntrbrancd
+		  , (select branmgmnum
+			   from nexs.tb_msbr_bran_m
+			  where brancd = b.cntrbrancd)	  as cntrbranmgmnum
+		  , nvl(b.gthbrancd, b.gthprearrbrancd) as gthbrancd
+		  , b.gthbranmgmnum
+		  , b.dlvbranmgmnum
+		  , b.empbranmgmnum
+		  ,case when b.empbrandiv = '16' and (nexs.fc_get_opruprbrancd(b.cntrbrancd,'07') =
+				  (select nexs.fc_get_opruprbrancd(opruprbrancd,'07') from tb_msbr_bran_m where branmgmnum =b.empbranmgmnum ))
+			   then b.empbranmgmnum
+			else '' end empbranmgmnum2
+	   from (select a.trspbillnum
+				  , a.prngnum
+				  , (select --+ index_desc (z pk_cscn_cntr_c)
+							z.cntrbrancd
+					   from nexs.tb_cscn_cntr_c	   z
+					  where z.clntnum				 = a.clntnum
+						and z.clntmgmcustcd		   = decode(a.sttlplcdiv, '1', a.clntnum, a.clntmgmcustcd)
+						and rownum					< 2)													as cntrbrancd
+				  , decode(a.gthbrancd, null, (select y.branmgmnum
+												 from nexs.tb_msbr_bran_m y
+												where y.brancd = a.gthprearrbrancd)
+											, (select y.branmgmnum
+												 from nexs.tb_msbr_bran_m y
+												where y.brancd = a.gthbrancd))								as gthbranmgmnum
+				  , a.gthprearrbrancd
+				  , a.gthbrancd
+				  , (select x.branmgmnum
+					   from nexs.tb_msbr_bran_m x
+					  where x.brancd = (select brancd
+										  from nexs.tb_msem_emp_c w
+										 where w.empnum = ?))												 as empbranmgmnum
+				  , (select t.branmgmnum
+					   from tb_msbr_bran_m t
+					  where t.brancd = (select z.brancd
+										  from tb_pdcl_clldlvtra_c z
+										 where z.trspbillnum = a.trspbillnum
+										   and z.cgosts	  = '91'))										as dlvbranmgmnum
+  , (select x.brandiv
+							 from nexs.tb_msbr_bran_m x
+							where x.brancd = (select brancd
+												from nexs.tb_msem_emp_c w
+											   where w.empnum =  ?))										 as empbrandiv
+			   from (select a.clntnum
+						  , a.clntmgmcustcd
+						  , b.sttlplcdiv
+						  , a.gthprearrbrancd
+						  , c.brancd				  as gthbrancd
+						  , a.trspbillnum
+						  , a.prngnum
+					   from nexs.tb_rvap_list_c	   a
+						  , nexs.tb_rvap_cnfr_c	   b
+						  , nexs.tb_pdcl_clldlvtra_c  c
+					  where a.prngnum				 = b.prngnum
+						and a.trspbillnum			 = c.trspbillnum(+)
+						and c.cgosts(+)			   = '11'
+						and a.trspbillnum			 = ?) a) b) c
