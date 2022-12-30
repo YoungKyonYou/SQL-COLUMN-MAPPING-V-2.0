@@ -1,0 +1,1 @@
+�안뇽:case when instr(nvl(c.cntrbranmgmnum, ' '), c.empbranmgmnum) = 1 then 'Y' decode(a.gthbrancd, null, (select BRAN_MNG_NO 

@@ -105,6 +105,7 @@ public class SqlMapping {
 
     public static String mapColumn(String sql) {
         for (int i = 0; i < wordEntities.size(); i++) {
+
             //매핑되는 것이 딱 하나일 때 1:1 매핑
             if (wordEntities.get(i).getColumnEntitySet().size() == 1) {
                 String[] aliasColumn1 = wordEntities.get(i).getWord().split("\\.");
@@ -122,6 +123,7 @@ public class SqlMapping {
                 //1:N 매핑 즉 하나의 as-is 컬럼이 여러 개의 to-be 컬럼으로 매핑될 경우
             } else if (wordEntities.get(i).getColumnEntitySet().size() > 1) {
                 String[] aliasColumn2 = wordEntities.get(i).getWord().split("\\.");
+
                 String msg = "/*선택 : \n";
                 for(ColumnEntity columnEntity : wordEntities.get(i).getColumnEntitySet()){
                       msg += "As-Is Table:" +"ㅣ"+columnEntity.getAsIsTableName()+"ㅣ"+" ColumnName:"+"ㅣ"+columnEntity.getAsIsLogicalColName()+"ㅣ"+"\nTo-Be Table:"+"ㅣ"+columnEntity.getToBeTableName()+"ㅣ"+" ColumnName:"+"ㅣ"+columnEntity.getToBeLogicalColName()+"ㅣ"+"\n\n";
@@ -130,8 +132,10 @@ public class SqlMapping {
 
                 //엘리어스 없는 컬럼일 경우
                 if(aliasColumn2.length==1){
+
                     sql = sql.replaceFirst("\\b"+wordEntities.get(i).getWord()+"\\b", "ㅣ"+wordEntities.get(i).getWord()+"ㅣ"+"\n"+msg);
                 }else if(aliasColumn2.length == 2){
+
                     //엘리어스 있는 컬럼일 경우
                     sql = sql.replaceFirst("\\b[a-zA-Z0-9]+\\." + aliasColumn2[1], aliasColumn2[0]+"\\."+"ㅣ"+aliasColumn2[1]+"ㅣ"+"\n"+msg);
                 }
@@ -158,6 +162,7 @@ public class SqlMapping {
                     if (separateAlias.length == 2) {
                         String mappedColumnNm = findColumnMapping(separateAlias[1], separateAlias[0]);
                         int idx = findColumnStartIdx(word, wordEntities);
+
                         String replacedSql = sqlForSubQuery.substring(wordEntities.get(idx).getStartIdx(), sqlForSubQuery.length()).replaceFirst("\\b" + word + "\\b", separateAlias[0] + "." + mappedColumnNm);
                         sqlForSubQuery = sqlForSubQuery.substring(0, wordEntities.get(idx).getStartIdx()) + replacedSql;
                     }
@@ -201,6 +206,7 @@ public class SqlMapping {
                 //여기서 if를 해주는 이유는 AS 이후의 alias를 as-is 컬럼명으로 착각할 수 있기 때문이다 이때는 필수적으로 있는 alias가 없는 경우이기 때문이다.
                 if (aliasColumn != null && aliasColumn.length == 2) {
                     String mappedColumnNm = findColumnMapping(wordEntities.get(i).getWord(), aliasColumn[0]);
+
                     sqlForSubQuery = sqlForSubQuery.substring(0, wordEntities.get(i).getStartIdx()) + sqlForSubQuery.substring(wordEntities.get(i).getStartIdx(), sqlForSubQuery.length()).replaceFirst("\\b" + aliasColumn[0] + wordEntities.get(i).getWord() + "\\b", mappedColumnNm);
                 }
             }

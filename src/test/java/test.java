@@ -57,11 +57,27 @@ public class test {
     @Test
     public void test3(){
         String tableNm = "tableNm";
-        String sql = "ㅣ nexs.tableNm ㅣ nexs.tableNm nexs.tableNm   " +
-                "nexs.tableNm nexs.tableNm sdfsfwe nexs.tableNm wre nexs.tableNm";
-        sql = sql.replaceAll("\\b[a-zA-Z0-9]+\\." + tableNm + "\\b", tableNm);
+        String sql = "case when instr(nvl(c.cntrbranmgmnum, ' '), c.empbranmgmnum) = 1 then 'Y' decode(a.gthbrancd, null, (select y.branmgmnum ";
+        sql = sql.replaceFirst("\\b[a-zA-Z0-9]+\\." + "branmgmnum", "BRAN_MNG_NO");
         System.out.println("안뇽:"+sql);
 
+
+    }
+
+    @Test
+    public void test4(){
+        String name = "유영균";
+        String name2 = "주현";
+
+        String comp = "이스타에스에이";
+        String test = name.replaceAll("(?<=.{1}).", "*");
+        System.out.println("tesT:"+test);
+
+        String test2 = name2.replaceAll("(?<=.{1}).", "*");
+        System.out.println("test2:"+test2);
+
+        String test3 = comp.replaceAll("(?<=.{1}).", "*");
+        System.out.println("test3:"+test3);
 
     }
 

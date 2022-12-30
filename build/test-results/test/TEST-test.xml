@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="test" tests="1" skipped="0" failures="0" errors="0" timestamp="2022-12-07T06:02:27" hostname="AISELN-YOUYK" time="0.016">
+<testsuite name="test" tests="1" skipped="0" failures="0" errors="0" timestamp="2022-12-29T07:36:29" hostname="AISELN-YOUYK" time="0.026">
   <properties/>
-  <testcase name="test3()" classname="test" time="0.016"/>
-  <system-out><![CDATA[안뇽:ㅣ tableNm ㅣ tableNm tableNm   tableNm tableNm sdfsfwe tableNm wre tableNm
+  <testcase name="test3()" classname="test" time="0.026"/>
+  <system-out><![CDATA[안뇽:case when instr(nvl(c.cntrbranmgmnum, ' '), c.empbranmgmnum) = 1 then 'Y' decode(a.gthbrancd, null, (select BRAN_MNG_NO 
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
